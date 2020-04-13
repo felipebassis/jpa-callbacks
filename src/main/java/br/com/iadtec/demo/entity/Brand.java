@@ -9,9 +9,13 @@ import javax.persistence.Table;
 import java.util.UUID;
 
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = "id", callSuper = false)
+@ToString
 @Entity
 @Table(name = "TB_BRAND")
-public class Brand {
+public class Brand extends Auditable<UUID> {
+
+    private static final long serialVersionUID = -7439626231854965576L;
 
     @Getter
     @Id

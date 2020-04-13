@@ -6,10 +6,13 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = "id", callSuper = false)
+@ToString
 @Entity
 @Table(name = "TB_CAR")
-public class Car {
+public class Car extends Auditable<UUID> {
 
+    private static final long serialVersionUID = -8816894757887525745L;
     @Getter
     @Id
     private UUID id = UUID.randomUUID();
