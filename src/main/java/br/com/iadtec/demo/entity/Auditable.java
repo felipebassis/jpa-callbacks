@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 @EntityListeners(AuditJpaListener.class)
 @MappedSuperclass
-public abstract class Auditable<ID extends Serializable> implements Serializable {
+public abstract class Auditable<ID extends Serializable> implements Serializable, Cloneable {
 
     private static final long serialVersionUID = -2884411994947722920L;
 
@@ -16,14 +16,19 @@ public abstract class Auditable<ID extends Serializable> implements Serializable
     public abstract ID getId();
 
     @Transient
-    private Auditable<ID> previousState;
+    private Object previousState;
 
     @PostLoad
-    public void loadCurrentState() {
-        this.previousState = SerializationUtils.clone(this);
+    public void loadCurrentState() throws CloneNotSupportedException {
+        this.previousState = this.clone();
     }
 
-    public Auditable<ID> getPreviousState() {
+    public Object getPreviousState() {
         return previousState;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

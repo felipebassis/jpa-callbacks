@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @NoArgsConstructor
 @EqualsAndHashCode(exclude = "id", callSuper = false)
-@ToString
+@ToString(exclude = "brand")
 @Entity
 @Table(name = "TB_CAR")
 public class Car extends Auditable<UUID> {
@@ -29,7 +29,7 @@ public class Car extends Auditable<UUID> {
 
     @Getter
     @Setter
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BRAND_ID", nullable = false)
     private Brand brand;
 }
