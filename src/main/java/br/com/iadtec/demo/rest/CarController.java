@@ -49,6 +49,8 @@ public class CarController {
         car.setBrand(brandRepository.findById(carDTO.getBrandId())
                 .orElseThrow(() -> new IllegalArgumentException("Entity not found")));
 
+        carRepository.save(car);
+
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
