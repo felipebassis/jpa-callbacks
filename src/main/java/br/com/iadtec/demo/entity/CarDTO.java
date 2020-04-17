@@ -7,8 +7,8 @@ import java.util.UUID;
 @Data
 public class CarDTO {
 
-    private UUID id;
+    private Long id;
+    private Long brandId;
     private String name;
     private Long year;
-    private UUID brandId;
 }

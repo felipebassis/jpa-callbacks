@@ -2,40 +2,67 @@ package br.com.iadtec.demo.listener;
 
 import br.com.iadtec.demo.entity.Auditable;
 import br.com.iadtec.demo.util.Autowirer;
-import lombok.EqualsAndHashCode;
+import br.com.iadtec.demo.util.EntityReflections;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.FlushMode;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static org.springframework.orm.jpa.EntityManagerFactoryUtils.closeEntityManager;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-@NoArgsConstructor
-@Component
 public class AuditJpaListener {
 
-    @PostPersist
-    public <ID extends Serializable> void showStateOnPersist(Auditable<ID> entity) {
-        log.info("[CURRENT_STATE] - {}", entity);
+    private EntityManagerFactory entityManagerFactory;
+
+    @PreUpdate
+    public void getPreviousState(Auditable<?> entity) {
+
+        String tableName = EntityReflections.getTableName(entity);
+
+        Map<String, Object> idColumnName = EntityReflections.getIdColumns(entity);
+
+        StringBuilder whereId = new StringBuilder(" where ");
+
+        List<Map.Entry<String, Object>> entries = new ArrayList<>(idColumnName.entrySet());
+        entries.sort(Map.Entry.comparingByKey());
+
+        Iterator<Map.Entry<String, Object>> entryIterator = entries.iterator();
+
+        while (entryIterator.hasNext()){
+            Map.Entry<String, Object> next = entryIterator.next();
+            whereId.append(next.getKey()).append(" = ? ");
+            if (entryIterator.hasNext()) {
+                whereId.append("and ");
+            }
+        }
+        EntityManager entityManager = getEntityManager();
+        Query query = entityManager.createNativeQuery("select * from " + tableName + whereId.toString(), entity.getClass());
+
+        AtomicInteger count = new AtomicInteger(0);
+        entries.forEach(entry -> query.setParameter(count.addAndGet(1), entry.getValue()));
+
+        Auditable<?> result = (Auditable<?>) query.getSingleResult();
+        AuditJpaListenerCache.putValueAudit(result);
+        log.info("[PREVIOUS_STATE] {} - [NEW_STATE] {}", result, entity);
+        entityManager.close();
     }
 
     @PostUpdate
-    public <ID extends Serializable> void showPreviousAndCurrentState(Auditable<ID> entity) {
-        log.info("[PREVIOUS_STATE] - {}; [CURRENT_STATE] - {}", entity.getPreviousState(), entity);
+    public void showPreviousAndCurrentState(Auditable<?> entity) {
+        log.info("[PREVIOUS_STATE] - {}; [CURRENT_STATE] - {}", AuditJpaListenerCache.getPreviousState(entity), entity);
     }
 
+    @PostPersist
     @PostRemove
-    public <ID extends Serializable> void showStateOnDeletion(Auditable<ID> entity) {
+    public void showStateOnDeletion(Auditable<?> entity) {
         log.info("[CURRENT_STATE] - {}", entity);
+    }
+
+    private EntityManager getEntityManager() {
+        if (Objects.isNull(entityManagerFactory)) {
+            entityManagerFactory = Autowirer.getBean(EntityManagerFactory.class);
+        }
+        return entityManagerFactory.createEntityManager();
     }
 }

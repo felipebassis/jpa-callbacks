@@ -1,50 +1,53 @@
 package br.com.iadtec.demo.rest;
 
-import br.com.iadtec.demo.entity.Brand;
+import br.com.iadtec.demo.entity.CarBrand;
+import br.com.iadtec.demo.entity.BrandBatchDTO;
 import br.com.iadtec.demo.entity.BrandDTO;
-import br.com.iadtec.demo.persistence.BrandRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping(path = "brand")
 public class BrandController {
 
-    private final BrandRepository brandRepository;
+    private final BrandService brandService;
 
     @Autowired
-    public BrandController(BrandRepository brandRepository) {
-        this.brandRepository = brandRepository;
+    public BrandController(BrandService brandService) {
+        this.brandService = brandService;
     }
 
     @PostMapping
-    public ResponseEntity<UUID> createBrand(@RequestBody BrandDTO brandDTO) {
-        Brand brand = new Brand();
-        brand.setName(brandDTO.getName());
+    public ResponseEntity<Long> createBrand(@RequestBody BrandDTO brandDTO) {
+        CarBrand carBrand = new CarBrand(brandDTO);
+        carBrand.setName(brandDTO.getName());
 
-        Brand brandSaved = brandRepository.save(brand);
+        CarBrand carBrandSaved = brandService.save(carBrand);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(brandSaved.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(carBrandSaved.getId());
     }
 
     @PutMapping(path = "{id}")
-    public ResponseEntity<Void> updateBrand(@PathVariable(name = "id") UUID id, @RequestBody BrandDTO brandDTO) {
-        Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Entity not found"));
-        brand.setName(brandDTO.getName());
+    public ResponseEntity<Void> updateBrand(@PathVariable(name = "id") Long id, @RequestBody BrandDTO brandDTO) {
+        CarBrand carBrand = brandService.findById(id);
+        carBrand.setName(brandDTO.getName());
 
-        brandRepository.save(brand);
+        brandService.save(carBrand);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @DeleteMapping(path = "{id}")
-    public ResponseEntity<Void> deleteBrand(@PathVariable(name = "id") UUID id) {
-        brandRepository.deleteById(id);
+    public ResponseEntity<Void> deleteBrand(@PathVariable(name = "id") Long id) {
+        brandService.delete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(path = "batch")
+    public ResponseEntity<Void> batchDelete(@RequestBody BrandBatchDTO brands) {
+        brandService.updateBatch(brands.getBrands());
         return ResponseEntity.ok().build();
     }
 }

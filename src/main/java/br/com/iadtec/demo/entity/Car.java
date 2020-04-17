@@ -3,19 +3,19 @@ package br.com.iadtec.demo.entity;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.UUID;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(exclude = "id", callSuper = false)
-@ToString(exclude = "brand")
+@ToString
 @Entity
 @Table(name = "TB_CAR")
-public class Car extends Auditable<UUID> {
+public class Car extends Auditable<CarId> {
 
     private static final long serialVersionUID = -8816894757887525745L;
+
     @Getter
-    @Id
-    private UUID id = UUID.randomUUID();
+    @EmbeddedId
+    private CarId id;
 
     @Getter
     @Setter
@@ -27,9 +27,7 @@ public class Car extends Auditable<UUID> {
     @Column(name = "YEAR", nullable = false)
     private Long year;
 
-    @Getter
-    @Setter
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BRAND_ID", nullable = false)
-    private Brand brand;
+    public Car(CarId id) {
+        this.id = id;
+    }
 }

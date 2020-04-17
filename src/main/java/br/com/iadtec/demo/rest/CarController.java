@@ -1,7 +1,9 @@
 package br.com.iadtec.demo.rest;
 
 import br.com.iadtec.demo.entity.Car;
+import br.com.iadtec.demo.entity.CarBrand;
 import br.com.iadtec.demo.entity.CarDTO;
+import br.com.iadtec.demo.entity.CarId;
 import br.com.iadtec.demo.persistence.BrandRepository;
 import br.com.iadtec.demo.persistence.CarRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "car")
@@ -27,12 +28,13 @@ public class CarController {
     }
 
     @PostMapping
-    public ResponseEntity<UUID> createBrand(@RequestBody CarDTO carDTO) {
-        Car car = new Car();
+    public ResponseEntity<CarId> createCar(@RequestBody CarDTO carDTO) {
+        CarBrand carBrand = brandRepository.findById(carDTO.getBrandId())
+                .orElseThrow(() -> new IllegalArgumentException("Entity not found"));
+
+        Car car = new Car(CarId.from(carRepository.count() + 1, carBrand));
         car.setName(carDTO.getName());
         car.setYear(carDTO.getYear());
-        car.setBrand(brandRepository.findById(carDTO.getBrandId())
-                .orElseThrow(() -> new IllegalArgumentException("Entity not found")));
 
         Car carSaved = carRepository.save(car);
 
@@ -40,24 +42,25 @@ public class CarController {
     }
 
     @PutMapping(path = "{id}")
-    public ResponseEntity<Void> updateBrand(@PathVariable(name = "id") UUID id, @RequestBody CarDTO carDTO) {
-        Car car = carRepository.findById(id)
+    public ResponseEntity<Void> updateCar(@PathVariable(name = "id") Long id, @RequestBody CarDTO carDTO) {
+        CarBrand carBrand = brandRepository.findById(carDTO.getBrandId())
+                .orElseThrow(() -> new IllegalArgumentException("Entity not found"));
+        Car car = carRepository.findById(CarId.from(id, carBrand))
                 .orElseThrow(() -> new IllegalArgumentException("Entity not found"));
         Optional.ofNullable(carDTO.getName())
                 .ifPresent(car::setName);
         Optional.ofNullable(carDTO.getYear())
                 .ifPresent(car::setYear);
-        Optional.ofNullable(carDTO.getBrandId())
-                .ifPresent(brandId -> car.setBrand(brandRepository.findById(brandId)
-                        .orElseThrow(() -> new IllegalArgumentException("Entity not found"))));
         carRepository.save(car);
 
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @DeleteMapping(path = "{id}")
-    public ResponseEntity<Void> deleteCar(@PathVariable(name = "id") UUID id) {
-        carRepository.deleteById(id);
+    public ResponseEntity<Void> deleteCar(@RequestBody CarDTO carDTO) {
+        CarBrand carBrand = brandRepository.findById(carDTO.getBrandId())
+                .orElseThrow(() -> new IllegalArgumentException("Entity not found"));
+        carRepository.deleteById(CarId.from(carDTO.getId(), carBrand));
         return ResponseEntity.ok().build();
     }
 }
