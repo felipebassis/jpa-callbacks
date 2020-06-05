@@ -4,8 +4,10 @@ import lombok.*;
 
 import javax.persistence.*;
 
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(exclude = "id", callSuper = false)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(exclude = {"id"}, callSuper = false)
 @ToString
 @Entity
 public class CarBrand extends Auditable<Long> {
@@ -19,11 +21,7 @@ public class CarBrand extends Auditable<Long> {
 
     @Getter
     @Setter
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    public CarBrand(BrandDTO brandDTO) {
-        this.id = brandDTO.getId();
-        this.name = brandDTO.getName();
-    }
 }

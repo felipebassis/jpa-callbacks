@@ -14,15 +14,22 @@ public class CarId implements Serializable {
 
     private static final long serialVersionUID = 8952167294523739165L;
 
-    @Column(name = "id")
-    private Long id;
+    @Getter
+    @Column(name = "year")
+    private Long year;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BRAND_ID", nullable = false)
-    private CarBrand brand;
+    @JoinColumns(value = {
+            @JoinColumn(name = "model_name", referencedColumnName = "name"),
+            @JoinColumn(name = "car_brand_id", referencedColumnName = "car_brand_id")
+    })
+    private Model model;
 
-    public CarId(CarBrand carBrand) {
-        this.brand = carBrand;
+    public Long getCarBrandId() {
+        return model.getCarBrandId();
+    }
 
+    public String getModelName() {
+        return model.getName();
     }
 }

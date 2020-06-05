@@ -17,7 +17,6 @@ public class AuditJpaListener {
 
     @PreUpdate
     public void getPreviousState(Auditable<?> entity) {
-
         String tableName = EntityReflections.getTableName(entity);
 
         Map<String, Object> idColumnName = EntityReflections.getIdColumns(entity);

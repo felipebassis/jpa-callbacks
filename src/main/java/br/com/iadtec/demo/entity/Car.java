@@ -2,10 +2,16 @@ package br.com.iadtec.demo.entity;
 
 import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.math.BigDecimal;
 
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode(exclude = "id", callSuper = false)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = false)
 @ToString
 @Entity
 @Table(name = "TB_CAR")
@@ -19,15 +25,18 @@ public class Car extends Auditable<CarId> {
 
     @Getter
     @Setter
-    @Column(name = "NAME", nullable = false, unique = true)
-    private String name;
+    @Column(name = "base_price", nullable = false, precision = 19, scale = 2)
+    private BigDecimal basePrice;
 
-    @Getter
-    @Setter
-    @Column(name = "YEAR", nullable = false)
-    private Long year;
+    public Long getYear() {
+        return id.getYear();
+    }
 
-    public Car(CarId id) {
-        this.id = id;
+    public Long getCarBrandId() {
+        return id.getCarBrandId();
+    }
+
+    public String getModelName() {
+        return id.getModelName();
     }
 }
